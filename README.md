@@ -25,4 +25,3 @@ Reports are written to `data/reports/`, with `latest.html` and `manifest.json` m
 - `/` for the archive
 - `/reports/latest` for the latest report
 - `/reports/:reportId` for a specific archived report
-- `/styles.css` for the compiled Tailwind stylesheet
