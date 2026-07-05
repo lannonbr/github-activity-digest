@@ -24,18 +24,12 @@ export function renderReport(options: {
       <p class="mt-3 text-sm text-zinc-600">Generated ${formatDate(entry.createdAt)} for ${formatDate(entry.windowStart)} through ${formatDate(entry.windowEnd)}.</p>
     </header>
 
-    <section class="mb-8 grid gap-3 sm:grid-cols-3">
-      ${metric("Tracked users", entry.trackedUserCount)}
-      ${metric("Active users", entry.activeUserCount)}
-      ${metric("Repos touched", entry.repositoriesTouchedCount)}
-    </section>
-
     ${summary.hasFailures ? `<div class="mb-8 border-l-4 border-amber-500 bg-amber-50 px-4 py-3 text-sm text-amber-950">Some users could not be fetched. The rest of the report was generated normally.</div>` : ""}
 
     <section class="space-y-8">
       ${summary.users
         .map(
-          (user) => `<article class="border-t border-zinc-200 pt-6">
+          (user, index) => `<article class="${index === 0 ? "" : "border-t border-zinc-200 pt-6"}">
         <h2 class="text-xl font-semibold text-zinc-950">${escapeHtml(user.label)}</h2>
         <p class="mt-1 text-sm text-zinc-500">@${escapeHtml(user.username)}</p>
         ${renderUserBody(user)}
@@ -65,7 +59,7 @@ export function renderArchivePage(reports: ReportEntry[]): string {
 </head>
 <body class="bg-zinc-50 text-zinc-950">
   <main class="mx-auto max-w-4xl px-5 py-8 sm:py-12">
-    <header class="mb-8 border-b border-zinc-200 pb-6">
+    <header class="mb-8 pb-6">
       <p class="mb-2 text-sm font-medium uppercase tracking-wide text-emerald-700">GitHub Activity Digest</p>
       <h1 class="text-3xl font-semibold tracking-normal">Report archive</h1>
     </header>
@@ -103,13 +97,6 @@ function renderArchiveItem(report: ReportEntry): string {
     <a class="text-lg font-semibold text-emerald-700 hover:text-emerald-800" href="/reports/${escapeAttribute(report.id)}">${formatDate(report.createdAt)}</a>
     <p class="mt-1 text-sm text-zinc-600">${formatDate(report.windowStart)} through ${formatDate(report.windowEnd)} · ${report.activeUserCount}/${report.trackedUserCount} active users · ${report.repositoriesTouchedCount} repos</p>
   </li>`;
-}
-
-function metric(label: string, value: number): string {
-  return `<div class="border border-zinc-200 bg-white px-4 py-3">
-    <div class="text-2xl font-semibold text-zinc-950">${value}</div>
-    <div class="text-sm text-zinc-500">${label}</div>
-  </div>`;
 }
 
 function formatDate(value: string): string {
