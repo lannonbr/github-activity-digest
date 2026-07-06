@@ -7,7 +7,7 @@ import { readManifest, reportsDir } from "./reportManifest.js";
 import { renderArchivePage } from "./renderReport.js";
 
 export async function startServer(config: AppConfig): Promise<void> {
-  const app = Fastify({ logger: true });
+  const app = Fastify({ logger: true, disableRequestLogging: true });
 
   app.get("/", async (_request, reply) => {
     const manifest = await readManifest(config);
