@@ -1,0 +1,41 @@
+on:
+  push:
+    branches:
+      - "main"
+    tags:
+      - "v*"
+name: Docker
+jobs:
+  build:
+    name: Build Container
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - name: Login to Docker Hub
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/lannonbr/github-activity-digest:${{ github.ref_name }}
+      - name: Prune old images
+        uses: lannonbr/prune-containers-action@4ec3200295eae3441082fa83c2eb5aa3cacedb06 # 1.0.1
+        with:
+          container-name: github-activity-digest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

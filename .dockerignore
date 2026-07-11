@@ -1,0 +1,10 @@
+.git
+.env
+.env.*
+node_modules
+dist
+data
+public
+npm-debug.log*
+Dockerfile
+README.md
