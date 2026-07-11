@@ -19,7 +19,7 @@ export function renderReport(options: {
 <body class="bg-zinc-50 text-zinc-950">
   <main class="mx-auto max-w-5xl px-5 py-8 sm:py-12">
     <header class="mb-8 border-b border-zinc-200 pb-6">
-      <p class="mb-2 text-sm font-medium uppercase tracking-wide text-emerald-700">GitHub Activity Digest</p>
+      <a href="/"><p class="mb-2 text-sm font-medium uppercase tracking-wide text-emerald-700">GitHub Activity Digest</p></a>
       <h1 class="text-3xl font-semibold tracking-normal text-zinc-950">Weekly public activity</h1>
       <p class="mt-3 text-sm text-zinc-600">Generated ${formatDate(entry.createdAt)} for ${formatDate(entry.windowStart)} through ${formatDate(entry.windowEnd)}.</p>
     </header>
@@ -29,7 +29,10 @@ export function renderReport(options: {
     <section class="space-y-8">
       ${summary.users
         .map(
-          (user, index) => `<article class="${index === 0 ? "" : "border-t border-zinc-200 pt-6"}">
+          (
+            user,
+            index,
+          ) => `<article class="${index === 0 ? "" : "border-t border-zinc-200 pt-6"}">
         <h2 class="text-xl font-semibold text-zinc-950">${escapeHtml(user.label)}</h2>
         <p class="mt-1 text-sm text-zinc-500">@${escapeHtml(user.username)}</p>
         ${renderUserBody(user)}
