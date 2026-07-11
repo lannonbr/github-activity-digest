@@ -16,11 +16,11 @@ npm install
 cp .env.example .env
 ```
 
-`GITHUB_TOKEN` is required for report generation. `DISCORD_WEBHOOK_URL` is required for scheduled runs and for `npm run generate -- --notify`.
+`GITHUB_TOKEN` and `DATA_DIR` are required for report generation. `DISCORD_WEBHOOK_URL` is required for scheduled runs and for `npm run generate -- --notify`. `DATA_DIR` controls where reports are stored and defaults to `./data` in `.env.example`.
 
-3. Start the app once to generate `config.yaml`, then edit it with your tracked users, local server URL, schedule, and data directory.
+3. Start the app once to generate `$DATA_DIR/config.yaml`, then edit it with your tracked users, local server URL, and schedule.
 
-Reports are written to `data/reports/`, with `latest.html` and `manifest.json` maintained automatically. The server exposes:
+Reports are written to `$DATA_DIR/reports/`, with `latest.html` and `manifest.json` maintained automatically. The server exposes:
 
 - `/` for the archive
 - `/reports/latest` for the latest report

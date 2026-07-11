@@ -27,7 +27,6 @@ schedule:
   time: "09:00"
 
 reports:
-  dataDir: "./data"
   lookbackDays: 7
 
 users: []
@@ -38,12 +37,23 @@ type LoadConfigOptions = {
   requireDiscord?: boolean;
 };
 
+type FileConfig = Omit<AppConfig, "reports"> & {
+  reports: Omit<AppConfig["reports"], "dataDir">;
+};
+
 export async function loadConfig(
   options: LoadConfigOptions = {},
 ): Promise<{ config: AppConfig; secrets: RuntimeSecrets }> {
-  const configPath = path.resolve(options.configPath ?? "config.yaml");
+  const dataDir = process.env.DATA_DIR;
+  if (!dataDir) {
+    throw new Error("Missing required environment variable DATA_DIR.");
+  }
+
+  const configPath = path.resolve(
+    options.configPath ?? path.join(dataDir, "config.yaml"),
+  );
   const parsed = await readConfig(configPath);
-  let config: AppConfig;
+  let config: FileConfig;
 
   try {
     config = validateConfig(parsed);
@@ -67,7 +77,7 @@ export async function loadConfig(
   }
 
   return {
-    config,
+    config: { ...config, reports: { ...config.reports, dataDir } },
     secrets: {
       githubToken,
       discordWebhookUrl,
@@ -95,7 +105,7 @@ async function writeDefaultConfig(configPath: string): Promise<void> {
   await fs.writeFile(configPath, defaultConfigYaml, { flag: "wx" });
 }
 
-function validateConfig(raw: unknown): AppConfig {
+function validateConfig(raw: unknown): FileConfig {
   if (!isRecord(raw)) throw new Error("Config must be a YAML object.");
 
   const result = configSchema.safeParse(raw);
@@ -134,7 +144,6 @@ const configSchema = z.object({
     ),
   }),
   reports: z.object({
-    dataDir: nonEmptyString,
     lookbackDays: z.number().int().min(1).max(90),
   }),
   users: z.array(
@@ -149,7 +158,7 @@ const configSchema = z.object({
       label: nonEmptyString,
     }),
   ),
-}) satisfies z.ZodType<AppConfig>;
+}) satisfies z.ZodType<FileConfig>;
 
 function isValidUrl(value: string): boolean {
   try {
