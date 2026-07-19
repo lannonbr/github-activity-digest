@@ -13,7 +13,7 @@ export async function startServer(config: AppConfig): Promise<void> {
     const manifest = await readManifest(config);
     return reply
       .type("text/html; charset=utf-8")
-      .send(renderArchivePage(manifest.reports));
+      .send(renderArchivePage({ config, reports: manifest.reports }));
   });
 
   app.get("/styles.css", async (_request, reply) => {

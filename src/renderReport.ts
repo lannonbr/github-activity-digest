@@ -13,7 +13,7 @@ export function renderReport(options: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GitHub Activity Digest - ${formatDate(entry.createdAt)}</title>
+  <title>GitHub Activity Digest - ${formatDate(entry.createdAt, config.schedule.timezone)}</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body class="bg-zinc-50 text-zinc-950">
@@ -21,7 +21,7 @@ export function renderReport(options: {
     <header class="mb-8 border-b border-zinc-200 pb-6">
       <a href="/"><p class="mb-2 text-sm font-medium uppercase tracking-wide text-emerald-700">GitHub Activity Digest</p></a>
       <h1 class="text-3xl font-semibold tracking-normal text-zinc-950">Weekly public activity</h1>
-      <p class="mt-3 text-sm text-zinc-600">Generated ${formatDate(entry.createdAt)} for ${formatDate(entry.windowStart)} through ${formatDate(entry.windowEnd)}.</p>
+      <p class="mt-3 text-sm text-zinc-600">Generated ${formatDate(entry.createdAt, config.schedule.timezone)} for ${formatDate(entry.windowStart, config.schedule.timezone)} through ${formatDate(entry.windowEnd, config.schedule.timezone)}.</p>
     </header>
 
     ${summary.hasFailures ? `<div class="mb-8 border-l-4 border-amber-500 bg-amber-50 px-4 py-3 text-sm text-amber-950">Some users could not be fetched. The rest of the report was generated normally.</div>` : ""}
@@ -51,7 +51,12 @@ export function renderReport(options: {
 </html>`;
 }
 
-export function renderArchivePage(reports: ReportEntry[]): string {
+export function renderArchivePage(options: {
+  config: AppConfig;
+  reports: ReportEntry[];
+}): string {
+  const { config, reports } = options;
+
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -69,7 +74,7 @@ export function renderArchivePage(reports: ReportEntry[]): string {
     ${
       reports.length === 0
         ? `<p class="text-zinc-600">No reports have been generated yet.</p>`
-        : `<ol class="divide-y divide-zinc-200 border-y border-zinc-200">${reports.map(renderArchiveItem).join("\n")}</ol>`
+        : `<ol class="divide-y divide-zinc-200 border-y border-zinc-200">${reports.map((report) => renderArchiveItem(report, config.schedule.timezone)).join("\n")}</ol>`
     }
   </main>
 </body>
@@ -95,17 +100,18 @@ function renderUserBody(user: ReportSummary["users"][number]): string {
   </div>`;
 }
 
-function renderArchiveItem(report: ReportEntry): string {
+function renderArchiveItem(report: ReportEntry, timeZone: string): string {
   return `<li class="py-4">
-    <a class="text-lg font-semibold text-emerald-700 hover:text-emerald-800" href="/reports/${escapeAttribute(report.id)}">${formatDate(report.createdAt)}</a>
-    <p class="mt-1 text-sm text-zinc-600">${formatDate(report.windowStart)} through ${formatDate(report.windowEnd)} · ${report.activeUserCount}/${report.trackedUserCount} active users · ${report.repositoriesTouchedCount} repos</p>
+    <a class="text-lg font-semibold text-emerald-700 hover:text-emerald-800" href="/reports/${escapeAttribute(report.id)}">${formatDate(report.createdAt, timeZone)}</a>
+    <p class="mt-1 text-sm text-zinc-600">${formatDate(report.windowStart, timeZone)} through ${formatDate(report.windowEnd, timeZone)} · ${report.activeUserCount}/${report.trackedUserCount} active users · ${report.repositoriesTouchedCount} repos</p>
   </li>`;
 }
 
-function formatDate(value: string): string {
+function formatDate(value: string, timeZone: string): string {
   return new Intl.DateTimeFormat("en", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone,
   }).format(new Date(value));
 }
 
