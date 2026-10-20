@@ -16,6 +16,11 @@ export type ActivityRecord = {
   repoUrl: string;
   kind: ActivityKind;
   occurredAt: string;
+  branch?: string;
+  pullRequestHead?: {
+    repoName: string;
+    branch: string;
+  };
 };
 
 export type TrackedUser = {

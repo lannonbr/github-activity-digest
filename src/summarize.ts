@@ -1,4 +1,4 @@
-import type { ActivityKind, UserActivityResult } from "./types.js";
+import type { ActivityKind, ActivityRecord, UserActivityResult } from "./types.js";
 
 export type RepoSummary = {
   repoName: string;
@@ -51,17 +51,22 @@ export function summarizeResults(results: UserActivityResult[]): ReportSummary {
 
   const users = results.map((result) => {
     const byRepo = new Map<string, RepoSummary>();
+    const pullRequestRepos = findPullRequestRepos(result.records);
 
     for (const record of result.records) {
-      repoNames.add(record.repoName);
-      const existing = byRepo.get(record.repoName) ?? {
-        repoName: record.repoName,
-        repoUrl: record.repoUrl,
+      const repo = (record.branch
+        ? pullRequestRepos.get(branchKey(record.repoName, record.branch))
+        : undefined) ?? record;
+      repoNames.add(repo.repoName.toLowerCase());
+      const repoKey = repo.repoName.toLowerCase();
+      const existing = byRepo.get(repoKey) ?? {
+        repoName: repo.repoName,
+        repoUrl: repo.repoUrl,
         counts: zeroCounts(),
         sentence: "",
       };
       existing.counts[record.kind] += 1;
-      byRepo.set(record.repoName, existing);
+      byRepo.set(repoKey, existing);
     }
 
     const repositories = [...byRepo.values()]
@@ -83,6 +88,31 @@ export function summarizeResults(results: UserActivityResult[]): ReportSummary {
     repositoriesTouchedCount: repoNames.size,
     hasFailures: users.some((user) => Boolean(user.error)),
   };
+}
+
+function findPullRequestRepos(records: ActivityRecord[]) {
+  const repos = new Map<
+    string,
+    { repoName: string; repoUrl: string } | null
+  >();
+  for (const record of records) {
+    const head = record.pullRequestHead;
+    if (!head) continue;
+    const key = branchKey(head.repoName, head.branch);
+    const existing = repos.get(key);
+    // A branch used for PRs to different repositories has no single destination.
+    if (existing === null) continue;
+    if (existing && existing.repoName.toLowerCase() !== record.repoName.toLowerCase()) {
+      repos.set(key, null);
+    } else {
+      repos.set(key, { repoName: record.repoName, repoUrl: record.repoUrl });
+    }
+  }
+  return repos;
+}
+
+function branchKey(repoName: string, branch: string): string {
+  return JSON.stringify([repoName.toLowerCase(), branch]);
 }
 
 function zeroCounts(): Record<ActivityKind, number> {

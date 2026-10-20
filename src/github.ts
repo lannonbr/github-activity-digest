@@ -73,7 +73,7 @@ async function fetchRecentEvents(
   return events;
 }
 
-function normalizeEvent(
+export function normalizeEvent(
   username: string,
   event: GitHubEvent,
   windowStart: Date,
@@ -110,6 +110,11 @@ function normalizeEvent(
           ...base,
           id: `push:${event.id}:${sha}`,
           kind: "pushedCommit",
+          branch:
+            typeof event.payload?.ref === "string" &&
+            event.payload.ref.startsWith("refs/heads/")
+              ? event.payload.ref.slice("refs/heads/".length)
+              : undefined,
         }));
     }
     case "PullRequestEvent": {
@@ -122,10 +127,14 @@ function normalizeEvent(
           ? event.payload.number
           : undefined;
       const merged = pullRequest?.merged === true;
+      const pullRequestBase = {
+        ...base,
+        pullRequestHead: readPullRequestHead(pullRequest),
+      };
       if (action === "opened" && number)
         return [
           {
-            ...base,
+            ...pullRequestBase,
             id: `pr:${repoName}#${number}:opened`,
             kind: "openedPullRequest",
           },
@@ -133,7 +142,7 @@ function normalizeEvent(
       if (action === "closed" && number && merged)
         return [
           {
-            ...base,
+            ...pullRequestBase,
             id: `pr:${repoName}#${number}:merged`,
             kind: "mergedPullRequest",
           },
@@ -141,7 +150,7 @@ function normalizeEvent(
       if (action === "closed" && number)
         return [
           {
-            ...base,
+            ...pullRequestBase,
             id: `pr:${repoName}#${number}:closed`,
             kind: "closedPullRequest",
           },
@@ -192,13 +201,37 @@ function normalizeEvent(
           refType === "repository"
             ? `repo:${repoName}:created`
             : `${refType}:${repoName}:${ref}:created`;
-        return [{ ...base, id, kind }];
+        return [{
+          ...base,
+          id,
+          kind,
+          branch:
+            refType === "branch" && typeof event.payload?.ref === "string"
+              ? event.payload.ref
+              : undefined,
+        }];
       }
       return [];
     }
     default:
       return [];
   }
+}
+
+function readPullRequestHead(
+  pullRequest: Record<string, unknown> | undefined,
+): ActivityRecord["pullRequestHead"] {
+  const head = isRecord(pullRequest?.head) ? pullRequest.head : undefined;
+  const repo = isRecord(head?.repo) ? head.repo : undefined;
+  if (typeof head?.ref !== "string" || !repo) return undefined;
+
+  let repoName = typeof repo.full_name === "string" ? repo.full_name : undefined;
+  // Public event payloads can contain only the API URL, without full_name.
+  if (!repoName && typeof repo.url === "string") {
+    const match = /^https:\/\/api\.github\.com\/repos\/([^/]+\/[^/]+)$/.exec(repo.url);
+    repoName = match?.[1];
+  }
+  return repoName ? { repoName, branch: head.ref } : undefined;
 }
 
 function dedupe(records: ActivityRecord[]): ActivityRecord[] {
