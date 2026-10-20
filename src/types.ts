@@ -7,7 +7,8 @@ export type ActivityKind =
   | "closedIssue"
   | "createdBranch"
   | "createdTag"
-  | "createdRepository";
+  | "createdRepository"
+  | "starredRepository";
 
 export type ActivityRecord = {
   id: string;

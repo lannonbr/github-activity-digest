@@ -32,6 +32,7 @@ const kindLabels: Record<ActivityKind, [singular: string, plural: string]> = {
   createdBranch: ["created 1 branch", "created {count} branches"],
   createdTag: ["created 1 tag", "created {count} tags"],
   createdRepository: ["created 1 repository", "created {count} repositories"],
+  starredRepository: ["starred 1 repository", "starred {count} repositories"],
 };
 
 const displayOrder: ActivityKind[] = [
@@ -44,6 +45,7 @@ const displayOrder: ActivityKind[] = [
   "createdBranch",
   "createdTag",
   "createdRepository",
+  "starredRepository",
 ];
 
 export function summarizeResults(results: UserActivityResult[]): ReportSummary {
@@ -126,6 +128,7 @@ function zeroCounts(): Record<ActivityKind, number> {
     createdBranch: 0,
     createdTag: 0,
     createdRepository: 0,
+    starredRepository: 0,
   };
 }
 

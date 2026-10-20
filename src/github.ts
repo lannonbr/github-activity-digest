@@ -95,6 +95,14 @@ export function normalizeEvent(
   };
 
   switch (event.type) {
+    case "WatchEvent": {
+      if (event.payload?.action !== "started") return [];
+      return [{
+        ...base,
+        id: `star:${repoName.toLowerCase()}`,
+        kind: "starredRepository",
+      }];
+    }
     case "PushEvent": {
       const commits = Array.isArray(event.payload?.commits)
         ? event.payload.commits
