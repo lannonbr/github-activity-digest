@@ -34,7 +34,7 @@ jobs:
           push: true
           tags: ghcr.io/lannonbr/github-activity-digest:${{ github.ref_name }}
       - name: Prune old images
-        uses: lannonbr/prune-containers-action@4ec3200295eae3441082fa83c2eb5aa3cacedb06 # 1.0.1
+        uses: lannonbr/prune-containers-action@7490ef2b9fffa09b8c1bb2be5875b9ea83e081b1 # 2.0.0
         with:
           container-name: github-activity-digest
         env:
